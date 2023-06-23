@@ -1,8 +1,8 @@
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import FormData from 'form-data';
-import {instanceOf} from "prop-types";
+import {NextApiRequest, NextApiResponse} from "next";
 
-export default async function (req, res) {
+export default async function (req: NextApiRequest, res: NextApiResponse) {
     if (req.method === 'POST') {
         const audioData = Buffer.from(req.body.audio, 'base64');
 
@@ -28,9 +28,11 @@ export default async function (req, res) {
             // Send the transcription back to the client
             res.status(200).json(response.data);
         } catch (error) {
-            console.log('error', error)
-            console.log('error response', error.response.data)
-            res.status(500).json({ error: error.toString() });
+            const axiosError = error as AxiosError;
+            if (axiosError.response) {
+                console.log('error response', axiosError.response.data);
+            }
+            res.status(500).json({ error: axiosError.message });
         }
     } else {
         res.status(405).json({ error: 'Method not allowed' });
